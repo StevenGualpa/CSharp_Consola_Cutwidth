@@ -1,0 +1,7 @@
+C:\Proyectos\C#\CSharp_Consola_Cutwidth\bin\Debug\ProyectoModelos.exe.config
+C:\Proyectos\C#\CSharp_Consola_Cutwidth\bin\Debug\ProyectoModelos.exe
+C:\Proyectos\C#\CSharp_Consola_Cutwidth\bin\Debug\ProyectoModelos.pdb
+C:\Proyectos\C#\CSharp_Consola_Cutwidth\obj\Debug\ProyectoModelos.csproj.AssemblyReference.cache
+C:\Proyectos\C#\CSharp_Consola_Cutwidth\obj\Debug\ProyectoModelos.csproj.CoreCompileInputs.cache
+C:\Proyectos\C#\CSharp_Consola_Cutwidth\obj\Debug\ProyectoModelos.exe
+C:\Proyectos\C#\CSharp_Consola_Cutwidth\obj\Debug\ProyectoModelos.pdb
