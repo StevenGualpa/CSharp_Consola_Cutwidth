@@ -14,17 +14,25 @@ namespace ProyectoModelos
             Console.WriteLine("Cutwidth Problem Solver");
 
             // Ruta del archivo de grafo dentro del proyecto
-            string filePath = "graph.txt"; // Asegúrate de que la ruta sea correcta según tu configuración
+            string filePath = "graph.txt";
 
             // Cargar grafo
             Graph graph = LoadGraph(filePath);
 
             // Solicitar detalles de la muestra
             Console.WriteLine("Enter the number of permutations to generate:");
-            int permutations = int.Parse(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int permutations))
+            {
+                Console.WriteLine("Invalid input for permutations. Please enter a valid integer.");
+                return;
+            }
 
             Console.WriteLine("Enter the number of iterations:");
-            int iterations = int.Parse(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int iterations))
+            {
+                Console.WriteLine("Invalid input for iterations. Please enter a valid integer.");
+                return;
+            }
 
             // Procesar el grafo
             ProcessGraph(graph, permutations, iterations);
@@ -37,8 +45,15 @@ namespace ProyectoModelos
             using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
+                bool isFirstLine = true;
                 while ((line = reader.ReadLine()) != null)
                 {
+                    if (isFirstLine)
+                    {
+                        isFirstLine = false;
+                        continue;
+                    }
+
                     var nodes = line.Split(' ').Select(int.Parse).ToArray();
                     edges.Add(new Arista(nodes[0], nodes[1]));
                 }
@@ -49,67 +64,89 @@ namespace ProyectoModelos
         static void ProcessGraph(Graph graph, int permutations, int iterations)
         {
             List<int> nodes = graph.Edges.SelectMany(e => new[] { e.Node1, e.Node2 }).Distinct().ToList();
-            Random random = new Random(DateTime.Now.Millisecond);
-            int globalMinCutwidth = int.MaxValue;
-            List<int> bestGlobalOrder = null;
+            Random random = new Random();
 
             for (int iter = 0; iter < iterations; iter++)
             {
-                int minCutwidth = int.MaxValue;
-                List<int> bestOrder = null;
-                Console.WriteLine($"Iteration {iter + 1}:");
+                int iterationMinCutwidth = int.MaxValue;
 
+                Console.WriteLine($"\nIteration {iter + 1}:");
                 for (int i = 0; i < permutations; i++)
                 {
                     List<int> currentOrder = nodes.OrderBy(n => random.Next()).ToList();
-                    int currentCutwidth = CalculateCutwidth(graph, currentOrder, true); // Modified to include verbose output
-                    if (currentCutwidth < minCutwidth)
-                    {
-                        minCutwidth = currentCutwidth;
-                        bestOrder = new List<int>(currentOrder);
-                    }
+                    int currentCutwidth = CalculateCutwidth(graph, currentOrder);
+
                     Console.WriteLine($"Permutation {i + 1}: {string.Join(", ", currentOrder)} - Cutwidth: {currentCutwidth}");
-                }
-                // Comparar el mínimo de esta iteración con el mínimo global
-                if (minCutwidth < globalMinCutwidth)
-                {
-                    globalMinCutwidth = minCutwidth;
-                    bestGlobalOrder = bestOrder;
+
+                    if (currentCutwidth < iterationMinCutwidth)
+                    {
+                        iterationMinCutwidth = currentCutwidth;
+                    }
                 }
 
-                Console.WriteLine($"Iteration {iter + 1}, Best Cutwidth: {minCutwidth}");
+                Console.WriteLine($"Iteration {iter + 1}, Best Cutwidth: {iterationMinCutwidth}");
             }
-            // Mostrar el mejor resultado global después de todas las iteraciones
-            Console.WriteLine($"Global Best Cutwidth: {globalMinCutwidth}");
-            Console.WriteLine("Best Node Order: " + string.Join(", ", bestGlobalOrder));
         }
 
-        
-        
-        
-        // Modified to include optional verbose output
-        static int CalculateCutwidth(Graph graph, List<int> order, bool verbose = false)
+        static int CalculateCutwidth(Graph graph, List<int> order, bool verbose = true)
         {
             int maxCrossing = 0;
+
+            // Iterar sobre cada punto de corte posible en la permutación
             for (int i = 0; i < order.Count - 1; i++)
             {
-                var crossingEdges = new List<string>();
                 int crossings = 0;
+                List<string> crossingEdges = new List<string>(); // Lista para guardar las aristas que cruzan
+
+                // Comparar cada arista con el punto de corte actual
                 foreach (var edge in graph.Edges)
                 {
-                    if (order.IndexOf(edge.Node1) <= i && order.IndexOf(edge.Node2) > i || order.IndexOf(edge.Node2) <= i && order.IndexOf(edge.Node1) > i)
+                    if ((order.IndexOf(edge.Node1) <= i && order.IndexOf(edge.Node2) > i) ||
+                        (order.IndexOf(edge.Node2) <= i && order.IndexOf(edge.Node1) > i))
                     {
-                        crossings++;
-                        crossingEdges.Add($"({edge.Node1}-{edge.Node2})");
+                        crossings++; // Incrementar el conteo de cruces
+                        crossingEdges.Add($"({edge.Node1}-{edge.Node2})"); // Agregar la arista a la lista de cruces
                     }
                 }
-                maxCrossing = Math.Max(maxCrossing, crossings);
+
+                // Actualizar el máximo de cruces encontrado
+                if (crossings > maxCrossing)
+                {
+                    maxCrossing = crossings;
+                }
+
+                // Si verbose es true, imprimir detalles de este punto de corte
                 if (verbose)
                 {
-                    Console.WriteLine($" Between {order[i]} and {order[i + 1]}: {crossings} crossings ({string.Join(", ", crossingEdges)})");
+                    Console.WriteLine($" Entre {order[i]} y {order[i + 1]}: {crossings} cruces ({String.Join(", ", crossingEdges)})");
                 }
             }
-            return maxCrossing;
+
+            return maxCrossing; // Retornar el número máximo de cruces encontrado en esta permutación
         }
+
+
+
+        static void ShowAllCombinations(Graph graph)
+        {
+            List<int> nodes = graph.Edges.SelectMany(e => new[] { e.Node1, e.Node2 }).Distinct().ToList();
+            var permutations = GetPermutations(nodes, nodes.Count);
+
+            foreach (var perm in permutations)
+            {
+                Console.WriteLine($"Permutation: {string.Join(", ", perm)}");
+            }
+        }
+
+        static IEnumerable<IEnumerable<T>> GetPermutations<T>(IEnumerable<T> list, int length)
+        {
+            if (length == 1) return list.Select(t => new T[] { t });
+
+            return GetPermutations(list, length - 1)
+                .SelectMany(t => list.Where(e => !t.Contains(e)),
+                            (t1, t2) => t1.Concat(new T[] { t2 }));
+        }
+
+
     }
 }
