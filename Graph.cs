@@ -7,13 +7,13 @@ using static ProyectoModelos.Program;
 
 namespace ProyectoModelos
 {
-    class Graph
+    class Grafo
     {
-        public List<Arista> Edges { get; private set; }
+        public List<Arista> Bordes { get; private set; }
 
-        public Graph(List<Arista> edges)
+        public Grafo(List<Arista> bordes)
         {
-            Edges = edges;
+            Bordes = bordes;
         }
 
     }
